@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Input and Response</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .list-container {
+            margin-top: 20px;
+        }
+        .list-item {
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin-top: 5px;
+            background-color: #f9f9f9;
+        }
+        .loading {
+            margin-top: 10px;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>section 2: 챗봇</h1>
+        <form id="textForm">
+            <label for="inputText">Enter text:</label><br>
+            <input type="text" id="inputText" name="text" required><br><br>
+            <button type="submit">Submit</button>
+        </form>
+        <div class="loading" id="loadingMessage" style="display: none;">로딩 중...</div>
+        <div class="list-container" id="listContainer">
+        </div>
+    </div>
+    <div>
+        section 1: 결과 <br>
+        <textarea id="section1" rows="4" cols="50"></textarea>
+        <br>
+        <button onclick="myFunction()">최종 제출</button>
+    </div>
+    <button id="startstt">stt</button>
+    <button id="stopstt">stop</button>
+
+    <script>    
+
+    window.onload = function() {
+
+        const recognition = new window.webkitSpeechRecognition() || new window.SpeechRecognition();
+        const language = 'ko-KR';
+
+        let finalTranscript = '';
+        let isRecognizing = false;
+        
+        recognition.onstart = function (event) {
+            console.log('onstart');
+            isRecognizing = true;
+        };
+
+        recognition.onend = function () {
+            console.log('onend');
+            isRecognizing = false;
+
+            if (finalTranscript) {
+                return false; // 최종 텍스트가 있으면 종료
+            }
+
+            // 1초 후 다시 시작
+            setTimeout(() => { // 약간의 지연을 두고 음성 인식을 다시 시작
+                if (!isRecognizing) {
+                    recognition.start();
+                }
+            }, 100);
+        };
+
+        recognition.continuous = true;
+        recognition.interimResults = true; 
+
+        recognition.onresult = function (event) {
+
+            let finalTranscript = '';
+            let interimTranscript = '';
+
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcript;
+                    if (finalTranscript !== '')
+                        recognition.stop();
+                        fetchText(finalTranscript);
+                        recognition.start();
+                } else {
+                    interimTranscript += transcript;
+                }
+            }
+            
+        };
+        function startStt () {
+            recognition.lang = language;
+            recognition.start();
+        }
+        document.getElementById('startstt').addEventListener('click', startStt);
+        document.getElementById('stopstt').addEventListener('click', () => recognition.stop());
+    }
+    const fetchText = async (inputText) => {
+            const loadingMessage = document.getElementById('loadingMessage');
+            loadingMessage.style.display = 'block';
+
+            fetch('/upload-text', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: inputText })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const listContainer = document.getElementById('listContainer');
+
+                const inputListItem = document.createElement('div');
+                inputListItem.className = 'list-item';
+                inputListItem.textContent = '환자: ' + inputText;
+                listContainer.appendChild(inputListItem);
+
+                const responseListItem = document.createElement('div');
+                responseListItem.className = 'list-item';
+                responseListItem.textContent = '의사: ' + data.response;
+                listContainer.appendChild(responseListItem);
+
+                let utterance = new SpeechSynthesisUtterance("Hello world!");
+                speechSynthesis.speak(utterance);
+
+
+                document.getElementById('textForm').reset();
+                loadingMessage.style.display = 'none';
+
+                console.log(data.lists)
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                loadingMessage.style.display = 'none';
+            });
+    }
+        document.getElementById('textForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const inputText = document.getElementById('inputText').value;
+            const loadingMessage = document.getElementById('loadingMessage');
+            loadingMessage.style.display = 'block';
+
+            fetch('/upload-text', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: inputText })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const listContainer = document.getElementById('listContainer');
+
+                const inputListItem = document.createElement('div');
+                inputListItem.className = 'list-item';
+                inputListItem.textContent = '환자: ' + inputText;
+                listContainer.appendChild(inputListItem);
+
+                const responseListItem = document.createElement('div');
+                responseListItem.className = 'list-item';
+                responseListItem.textContent = '의사: ' + data.response;
+                listContainer.appendChild(responseListItem);
+
+                let utterance = new SpeechSynthesisUtterance("Hello world!");
+                speechSynthesis.speak(utterance);
+
+                document.getElementById('textForm').reset();
+                loadingMessage.style.display = 'none';
+
+                console.log(data.lists)
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                loadingMessage.style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>
