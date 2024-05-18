@@ -155,6 +155,7 @@ app.post("/upload-text", async (req, res) => {
   console.log(text)
 
   prevConversation.push({ role: "user", content: text });
+  console.log(prevConversation);
   const promptBool = await checklistToBoolean(JSON.stringify(prevConversation, null, 2));
 
   const prompt = [

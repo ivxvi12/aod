@@ -30,6 +30,8 @@
 </head>
 <body>
     <div class="container">
+
+        <button id="startstt">speech to text</button><button id="stopstt">stop</button>
         <h1>section 2: 챗봇</h1>
         <form id="textForm">
             <label for="inputText">Enter text:</label><br>
@@ -40,14 +42,12 @@
         <div class="list-container" id="listContainer">
         </div>
     </div>
-    <div>
+    <div class="container">
         section 1: 결과 <br>
         <textarea id="section1" rows="4" cols="50"></textarea>
         <br>
         <button onclick="submitFinal()">최종 제출</button>
     </div>
-    <button id="startstt">stt</button>
-    <button id="stopstt">stop</button>
 
     <script>    
         function submitFinal() {
@@ -202,9 +202,6 @@
                 responseListItem.className = 'list-item';
                 responseListItem.textContent = '의사: ' + data.response;
                 listContainer.appendChild(responseListItem);
-
-                let utterance = new SpeechSynthesisUtterance("Hello world!");
-                speechSynthesis.speak(utterance);
 
                 document.getElementById('textForm').reset();
                 loadingMessage.style.display = 'none';
