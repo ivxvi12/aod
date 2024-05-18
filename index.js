@@ -73,11 +73,15 @@ app.post("/submit", async (req, res) => {
     messages: [
       {
         role: 'user',
-        content: 'Say this is a test'
+        content: 'contents: ' + text + '\n contents 내용을 요약해주세요.'
       }
     ],});
   console.log(chatCompletion.choices[0].message.content);
-  res.end();
+  if (chatCompletion && chatCompletion.choices && chatCompletion.choices.length > 0) {
+    res.json({ response: chatCompletion.choices[0].message.content });
+  } else {
+    res.status(500).json({ error: "Invalid response format from OpenAI API" });
+  }
 });
 
 app.post("/upload-text", async (req, res) => {
